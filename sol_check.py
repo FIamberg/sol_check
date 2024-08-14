@@ -40,7 +40,44 @@ def fetch_data(_conn, date_from=None, date_to=None):
     return df
 
 def create_summary_table(df):
-    # ... (оставляем без изменений) ...
+    buys = df[['received_currency', 'wallet_address', 'swapped_value_USD']].rename(columns={
+        'received_currency': 'coin',
+        'swapped_value_USD': 'volume'
+    })
+    buys['transaction_type'] = 'buy'
+
+    sells = df[['swapped_currency', 'wallet_address', 'swapped_value_USD']].rename(columns={
+        'swapped_currency': 'coin',
+        'swapped_value_USD': 'volume'
+    })
+    sells['transaction_type'] = 'sell'
+
+    combined = pd.concat([buys, sells])
+
+    summary = combined.groupby(['coin', 'transaction_type']).agg({
+        'wallet_address': 'nunique',
+        'volume': 'sum'
+    }).reset_index()
+
+    summary_pivot = summary.pivot(index='coin', columns='transaction_type', 
+                                  values=['wallet_address', 'volume'])
+    
+    summary_pivot.columns = [f'{col[1]}_{col[0]}' for col in summary_pivot.columns]
+    summary_pivot = summary_pivot.reset_index()
+    
+    column_mapping = {
+        'buy_wallet_address': 'buy_wallets',
+        'sell_wallet_address': 'sell_wallets',
+        'buy_volume': 'buy_volume',
+        'sell_volume': 'sell_volume'
+    }
+    summary_pivot = summary_pivot.rename(columns=column_mapping)
+    
+    summary_pivot = summary_pivot.fillna(0)
+    
+    summary_pivot = summary_pivot.sort_values('buy_wallets', ascending=False)
+    
+    return summary_pivot
 
 def update_date_range(start_date, end_date):
     st.session_state.date_range = [start_date, end_date]
