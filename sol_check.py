@@ -5,6 +5,9 @@ import datetime
 
 st.set_page_config(layout="wide")
 
+# Константа для смещения времени
+TIME_OFFSET = datetime.timedelta(hours=3)
+
 def init_connection():
     return mysql.connector.connect(
         host="185.120.57.125",
@@ -79,34 +82,47 @@ def create_summary_table(df):
 def update_date_range(start_date, end_date):
     st.session_state.date_range = [start_date, end_date]
 
+def get_current_time_with_offset():
+    return datetime.datetime.now().replace(microsecond=0) + TIME_OFFSET
+
 def main():
     st.title("Solana Parser Dashboard")
 
-    today = datetime.datetime.now().replace(microsecond=0)
-    yesterday = today - datetime.timedelta(hours=24)
+    current_time = get_current_time_with_offset()
+    yesterday = current_time - datetime.timedelta(hours=24)
 
     if 'date_range' not in st.session_state:
-        st.session_state.date_range = [yesterday, today]
+        st.session_state.date_range = [yesterday, current_time]
 
     st.sidebar.subheader("Быстрый выбор дат")
     if st.sidebar.button("Последние 2 часа"):
-        end_date = datetime.datetime.now().replace(microsecond=0)
-        start_date = end_date - datetime.timedelta(hours=2)
+        end_date = get_current_time_with_offset()
+        start_date = end_date - datetime.timedelta(hours=3)
         update_date_range(start_date, end_date)
     if st.sidebar.button("Последние 6 часов"):
-        end_date = datetime.datetime.now().replace(microsecond=0)
-        start_date = end_date - datetime.timedelta(hours=6)
+        end_date = get_current_time_with_offset()
+        start_date = end_date - datetime.timedelta(hours=7)
         update_date_range(start_date, end_date)
     if st.sidebar.button("Последние 24 часа"):
-        update_date_range(today - datetime.timedelta(hours=24), today)
+        end_date = get_current_time_with_offset()
+        start_date = end_date - datetime.timedelta(hours=25)
+        update_date_range(start_date, end_date)
     if st.sidebar.button("Последние 3 дня"):
-        update_date_range(today - datetime.timedelta(days=2), today)
+        end_date = get_current_time_with_offset()
+        start_date = end_date - datetime.timedelta(days=3, hours=1)
+        update_date_range(start_date, end_date)
     if st.sidebar.button("Последние 7 дней"):
-        update_date_range(today - datetime.timedelta(days=6), today)
+        end_date = get_current_time_with_offset()
+        start_date = end_date - datetime.timedelta(days=7, hours=1)
+        update_date_range(start_date, end_date)
     if st.sidebar.button("Текущий месяц"):
-        update_date_range(today.replace(day=1), today)
+        end_date = get_current_time_with_offset()
+        start_date = end_date.replace(day=1, hour=0, minute=0, second=0) - datetime.timedelta(hours=1)
+        update_date_range(start_date, end_date)
     if st.sidebar.button("Все время"):
-        update_date_range(datetime.datetime(2000, 1, 1), today)
+        end_date = get_current_time_with_offset()
+        start_date = datetime.datetime(2000, 1, 1)
+        update_date_range(start_date, end_date)
 
     date_from = st.sidebar.date_input("Начальная дата", st.session_state.date_range[0])
     date_to = st.sidebar.date_input("Конечная дата", st.session_state.date_range[1])
