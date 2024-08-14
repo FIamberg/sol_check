@@ -98,6 +98,10 @@ def main():
         st.session_state.date_range = [start_date, end_date]
 
     st.sidebar.subheader("Быстрый выбор дат")
+    if st.sidebar.button("Последние 2 часа"):
+        update_date_range(today - datetime.timedelta(hours=2), today)
+    if st.sidebar.button("Последние 6 часов"):
+        update_date_range(today - datetime.timedelta(hours=6), today)
     if st.sidebar.button("Последние 24 часа"):
         update_date_range(today - datetime.timedelta(hours=24), today)
     if st.sidebar.button("Последние 3 дня"):
@@ -122,7 +126,7 @@ def main():
         conn = get_connection()
         df = fetch_data(conn, date_from, date_to)
 
-        st.subheader(f"Сводная информация по монетам с {date_from.date()} по {date_to.date()}")
+        st.subheader(f"Сводная информация по монетам с {date_from} по {date_to}")
         summary_df = create_summary_table(df)
         
         # Добавляем столбец с чекбоксами
@@ -147,7 +151,7 @@ def main():
         # Получаем выбранные монеты
         selected_coins = edited_df[edited_df['Select']]['coin'].tolist()
 
-        st.subheader(f"Детальные данные с {date_from.date()} по {date_to.date()}")
+        st.subheader(f"Детальные данные с {date_from} по {date_to}")
         if selected_coins:
             filtered_df = df[(df['swapped_currency'].isin(selected_coins)) | (df['received_currency'].isin(selected_coins))]
             st.dataframe(filtered_df, use_container_width=True)
