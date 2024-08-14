@@ -128,16 +128,16 @@ def main():
         # Добавляем столбец с чекбоксами
         summary_df.insert(0, 'Select', False)
         
-        # Отображаем таблицу с возможностью редактирования
+        # Отображаем таблицу с возможностью редактирования, без форматирования
         edited_df = st.data_editor(
             summary_df,
             column_config={
                 "Select": st.column_config.CheckboxColumn(label="Выбрать"),
                 "coin": "Монета",
-                "buy_wallets": st.column_config.NumberColumn("Кошельки (покупка)"),
-                "sell_wallets": st.column_config.NumberColumn("Кошельки (продажа)"),
-                "buy_volume": st.column_config.NumberColumn("Объем покупок", format="$.2f"),
-                "sell_volume": st.column_config.NumberColumn("Объем продаж", format="$.2f")
+                "buy_wallets": "Кошельки (покупка)",
+                "sell_wallets": "Кошельки (продажа)",
+                "buy_volume": "Объем покупок",
+                "sell_volume": "Объем продаж"
             },
             disabled=["coin", "buy_wallets", "sell_wallets", "buy_volume", "sell_volume"],
             hide_index=True,
