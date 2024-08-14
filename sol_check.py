@@ -80,8 +80,8 @@ def create_summary_table(df):
     # Заполняем NaN значения нулями
     summary_pivot = summary_pivot.fillna(0)
     
-    # Сортируем по объему покупок
-    summary_pivot = summary_pivot.sort_values('buy_volume', ascending=False)
+    # Сортируем по количеству кошельков покупки (от большего к меньшему)
+    summary_pivot = summary_pivot.sort_values('buy_wallets', ascending=False)
     
     return summary_pivot
 
