@@ -122,13 +122,13 @@ def main():
     if st.sidebar.button("Последние 2 часа"):
         start_date, end_date = get_last_2_hours_range()
         update_date_range(start_date, end_date)
-        st.experimental_rerun()
+        st.rerun()
         
     if st.sidebar.button("Последние 6 часов"):
         end_date = get_current_time_with_offset()
         start_date = end_date - datetime.timedelta(hours=6)
         update_date_range(start_date, end_date)
-        st.experimental_rerun()
+        st.rerun()
     if st.sidebar.button("Последние 24 часа"):
         end_date = get_current_time_with_offset()
         start_date = end_date - datetime.timedelta(hours=25)
