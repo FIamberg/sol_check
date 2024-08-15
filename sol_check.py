@@ -79,15 +79,36 @@ def create_summary_table(df):
     
     return summary_pivot
 
+def create_wallet_summary(df, selected_coins):
+    filtered_df = df[(df['swapped_currency'].isin(selected_coins)) | (df['received_currency'].isin(selected_coins))]
+    
+    buys = filtered_df[filtered_df['received_currency'].isin(selected_coins)]
+    sells = filtered_df[filtered_df['swapped_currency'].isin(selected_coins)]
+    
+    buy_summary = buys.groupby('wallet_address').agg({
+        'received_currency': 'count',
+        'swapped_value_USD': 'sum'
+    }).rename(columns={'received_currency': 'unique_buy_transactions', 'swapped_value_USD': 'buy_volume'})
+    
+    sell_summary = sells.groupby('wallet_address').agg({
+        'swapped_currency': 'count',
+        'swapped_value_USD': 'sum'
+    }).rename(columns={'swapped_currency': 'unique_sell_transactions', 'swapped_value_USD': 'sell_volume'})
+    
+    wallet_summary = pd.merge(buy_summary, sell_summary, on='wallet_address', how='outer').fillna(0)
+    wallet_summary = wallet_summary.reset_index()
+    
+    return wallet_summary
+
 def update_date_range(start_date, end_date):
     st.session_state.date_range = [start_date, end_date]
 
 def get_current_time_with_offset():
-    return datetime.datetime.now().replace(microsecond=0) + TIME_OFFSET
+    return datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0) + TIME_OFFSET
 
 def get_last_2_hours_range():
     end_date = get_current_time_with_offset()
-    start_date = end_date - datetime.timedelta(hours=3)
+    start_date = end_date - datetime.timedelta(hours=2)
     return start_date, end_date
 
 def main():
@@ -99,11 +120,15 @@ def main():
 
     st.sidebar.subheader("Быстрый выбор дат")
     if st.sidebar.button("Последние 2 часа"):
-        update_date_range(*get_last_2_hours_range())
+        start_date, end_date = get_last_2_hours_range()
+        update_date_range(start_date, end_date)
+        st.experimental_rerun()
+        
     if st.sidebar.button("Последние 6 часов"):
         end_date = get_current_time_with_offset()
-        start_date = end_date - datetime.timedelta(hours=7)
+        start_date = end_date - datetime.timedelta(hours=6)
         update_date_range(start_date, end_date)
+        st.experimental_rerun()
     if st.sidebar.button("Последние 24 часа"):
         end_date = get_current_time_with_offset()
         start_date = end_date - datetime.timedelta(hours=25)
@@ -163,12 +188,17 @@ def main():
 
         selected_coins = edited_df[edited_df['Select']]['coin'].tolist()
 
-        st.subheader(f"Детальные данные с {date_from} по {date_to}")
         if selected_coins:
             filtered_df = df[(df['swapped_currency'].isin(selected_coins)) | (df['received_currency'].isin(selected_coins))]
+            
+            st.subheader(f"Сводная информация по кошелькам для выбранных монет")
+            wallet_summary_df = create_wallet_summary(filtered_df, selected_coins)
+            st.dataframe(wallet_summary_df, use_container_width=True)
+
+            st.subheader(f"Детальные данные с {date_from} по {date_to}")
             st.dataframe(filtered_df, use_container_width=True)
         else:
-            st.dataframe(df, use_container_width=True)
+            st.warning("Пожалуйста, выберите хотя бы одну монету для отображения детальной информации.")
 
     else:
         st.error("Пожалуйста, выберите диапазон дат.")
