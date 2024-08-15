@@ -98,6 +98,9 @@ def create_wallet_summary(df, selected_coins):
     wallet_summary = pd.merge(buy_summary, sell_summary, on='wallet_address', how='outer').fillna(0)
     wallet_summary = wallet_summary.reset_index()
     
+    # Добавление ссылки на dexcheck.ai
+    wallet_summary['wallet_link'] = wallet_summary['wallet_address'].apply(lambda x: f"https://dexcheck.ai/app/wallet-analyzer/{x}")
+    
     return wallet_summary
 
 def update_date_range(start_date, end_date):
@@ -193,7 +196,22 @@ def main():
             
             st.subheader(f"Сводная информация по кошелькам для выбранных монет")
             wallet_summary_df = create_wallet_summary(filtered_df, selected_coins)
-            st.dataframe(wallet_summary_df, use_container_width=True)
+            
+            st.data_editor(
+                wallet_summary_df,
+                column_config={
+                    "wallet_address": "Кошелек",
+                    "wallet_link": st.column_config.LinkColumn(
+                    label="Анализ кошелька", 
+                    display_text="Link",),
+                    "unique_buy_transactions": "Уникальные покупки",
+                    "buy_volume": "Объем покупок",
+                    "unique_sell_transactions": "Уникальные продажи",
+                    "sell_volume": "Объем продаж"
+                },
+                hide_index=True,
+                use_container_width=True
+            )
 
             st.subheader(f"Детальные данные с {date_from} по {date_to}")
             st.dataframe(filtered_df, use_container_width=True)
